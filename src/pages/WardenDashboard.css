@@ -1,0 +1,94 @@
+@import './Shared.css';
+
+/* Warden-specific grid */
+.warden-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "approvals occupancy"
+    "complaints-wide complaints-wide"
+    "attendance attendance";
+  gap: 20px;
+}
+.warden-card {
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px solid #eaeaef;
+  padding: 24px;
+}
+.approvals-card      { grid-area: approvals; }
+.occupancy-card      { grid-area: occupancy; }
+.complaints-wide-card{ grid-area: complaints-wide; }
+.attendance-card     { grid-area: attendance; }
+
+/* Approvals */
+.approval-list { display: flex; flex-direction: column; gap: 16px; }
+.approval-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #eaeaef;
+  border-radius: 10px;
+}
+.approval-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: white;
+  flex-shrink: 0;
+}
+.purple-avatar { background-color: #5142f5; }
+.blue-avatar   { background-color: #3b82f6; }
+.orange-avatar { background-color: #f59e0b; }
+.approval-info { flex: 1; }
+.approval-info h4 { font-size: 14px; color: #1a1a24; margin-bottom: 4px; }
+.approval-info p  { font-size: 12px; color: #646473; margin-bottom: 4px; }
+.time-ago { font-size: 11px; color: #8c8c9a; }
+.approval-actions { display: flex; flex-direction: column; gap: 6px; }
+.approve-btn, .reject-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+.approve-btn { background-color: #eaf9ec; color: #10b981; }
+.reject-btn  { background-color: #fdeaea; color: #f53d3d; }
+
+/* Occupancy */
+.occupancy-stats { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+.occ-item {}
+.occ-labels { display: flex; justify-content: space-between; font-size: 13px; color: #1a1a24; margin-bottom: 6px; }
+.occ-labels span { color: #646473; }
+.occ-bar-wrapper { background-color: #f4f4f7; border-radius: 4px; height: 8px; overflow: hidden; }
+.occ-bar { height: 100%; border-radius: 4px; }
+.occ-summary { display: flex; justify-content: space-around; background-color: #f9f9fc; border-radius: 10px; padding: 16px; margin-top: 8px; }
+.occ-sum-item { display: flex; flex-direction: column; align-items: center; }
+.occ-sum-value { font-size: 20px; font-weight: 700; color: #1a1a24; }
+.occ-sum-label { font-size: 12px; color: #646473; }
+
+/* Attendance */
+.attendance-summary { display: flex; justify-content: space-around; gap: 16px; }
+.att-item {
+  flex: 1;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.att-item.present { background-color: #eaf9ec; }
+.att-item.absent  { background-color: #eaf3ff; }
+.att-item.pending { background-color: #fff4e5; }
+.att-count { font-size: 32px; font-weight: 700; color: #1a1a24; }
+.att-item.present .att-count { color: #10b981; }
+.att-item.absent  .att-count { color: #3b82f6; }
+.att-item.pending .att-count { color: #f59e0b; }
+.att-label { font-size: 13px; color: #646473; margin-top: 4px; }

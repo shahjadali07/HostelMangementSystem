@@ -1,0 +1,254 @@
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9f9fc;
+}
+
+.dashboard-sidebar {
+  width: 250px;
+  background-color: #ffffff;
+  border-right: 1px solid #eaeaef;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.logo-placeholder {
+  width: 32px;
+  height: 32px;
+  background-color: #0b0f19;
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a24;
+  line-height: 1.2;
+}
+
+.logo-subtitle {
+  font-size: 11px;
+  color: #646473;
+}
+
+.sidebar-action {
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.new-entry-btn {
+  width: 100%;
+  background-color: #5142f5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  padding: 0 12px;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: #505060;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background-color: #f4f4f7;
+  color: #1a1a24;
+}
+
+.nav-item.active {
+  background-color: #f0eeff;
+  color: #5142f5;
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px 12px 0;
+  border-top: 1px solid #eaeaef;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.dashboard-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #eaeaef;
+}
+
+.topbar-tabs {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+}
+
+.topbar-tab {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #646473;
+  cursor: pointer;
+  position: relative;
+}
+
+.topbar-tab.active {
+  color: #1a1a24;
+}
+
+.topbar-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #1a1a24;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background-color: #f4f4f7;
+  border-radius: 20px;
+  padding: 6px 16px;
+  gap: 8px;
+}
+
+.search-bar input {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  width: 150px;
+}
+
+.search-icon {
+  color: #8c8c9a;
+}
+
+.quick-action-btn {
+  background-color: #eaeaef;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a24;
+  cursor: pointer;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #505060;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 6px;
+  background-color: #f53d3d;
+  border-radius: 50%;
+}
+
+.profile-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.profile-img:hover {
+  border-color: #5142f5;
+}
+
+.sidebar-badge {
+  background-color: #f53d3d;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin-left: auto;
+}
+
+.dashboard-content {
+  padding: 32px 40px;
+  flex: 1;
+  overflow-y: auto;
+}

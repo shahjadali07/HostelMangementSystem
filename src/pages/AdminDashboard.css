@@ -1,0 +1,107 @@
+@import './Shared.css';
+
+/* We keep the stats-row from Shared.css, but we need new styles for the management grid */
+
+.control-center-header {
+  margin-top: 32px;
+  margin-bottom: 20px;
+}
+.control-center-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a24;
+  margin-bottom: 4px;
+}
+.control-center-header p {
+  font-size: 14px;
+  color: #646473;
+}
+
+.management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding-bottom: 40px;
+}
+
+.module-card {
+  background: #ffffff;
+  border: 1px solid #eaeaef;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.module-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+  border-color: #d1d1dd;
+}
+
+.module-card-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.module-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Base icon colors */
+.module-icon-wrapper.blue { background-color: #eef2ff; color: #4f46e5; }
+.module-icon-wrapper.orange { background-color: #fff7ed; color: #ea580c; }
+.module-icon-wrapper.purple { background-color: #f3e8ff; color: #9333ea; }
+.module-icon-wrapper.green { background-color: #f0fdf4; color: #16a34a; }
+.module-icon-wrapper.indigo { background-color: #e0e7ff; color: #4338ca; }
+.module-icon-wrapper.emerald { background-color: #ecfdf5; color: #059669; }
+.module-icon-wrapper.red { background-color: #fef2f2; color: #dc2626; }
+.module-icon-wrapper.teal { background-color: #f0fdfa; color: #0d9488; }
+.module-icon-wrapper.amber { background-color: #fffbeb; color: #d97706; }
+.module-icon-wrapper.fuchsia { background-color: #fae8ff; color: #c026d3; }
+.module-icon-wrapper.rose { background-color: #fff1f2; color: #e11d48; }
+
+.module-text h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a24;
+  margin-bottom: 4px;
+}
+
+.module-text p {
+  font-size: 13px;
+  color: #646473;
+  line-height: 1.4;
+}
+
+.module-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5142f5;
+  cursor: pointer;
+  transition: gap 0.2s;
+  align-self: flex-start;
+}
+
+.module-card:hover .module-btn {
+  gap: 8px;
+}

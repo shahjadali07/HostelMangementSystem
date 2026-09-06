@@ -1,0 +1,320 @@
+@import './Shared.css';
+
+/* Bento Grid Layout */
+.bento-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  grid-template-areas: 
+    "notice fee"
+    "notice complaints"
+    "leave complaints";
+}
+
+.bento-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #eaeaef;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Grid Areas */
+.profile-card       { grid-area: profile; }
+.fee-alert-card     { grid-area: fee; background-color: #fff2f2; border-color: #ffd5d5; }
+.room-details-card  { grid-area: room; }
+.complaints-card    { grid-area: complaints; }
+.notice-board-card  { grid-area: notice; }
+.leave-requests-card{ grid-area: leave; }
+
+/* Profile Card & Room Details (Kept for reference if needed elsewhere) */
+.profile-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+.profile-text h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a24;
+  margin-bottom: 8px;
+}
+.profile-text p {
+  font-size: 13px;
+  color: #646473;
+  line-height: 1.5;
+}
+.progress-circle {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+.circular-chart { display: block; width: 100%; }
+.circle-bg  { fill: none; stroke: #eaeaef; stroke-width: 3.8; }
+.circle     { fill: none; stroke: #5142f5; stroke-width: 2.8; stroke-linecap: round; }
+.percentage { fill: #1a1a24; font-size: 8px; font-weight: bold; text-anchor: middle; }
+
+.profile-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #eaeaef;
+  padding-top: 16px;
+}
+.missing-info { font-size: 13px; color: #646473; }
+
+/* ======== NEW DASHBOARD STYLES ======== */
+
+.welcome-text h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a24;
+  margin-bottom: 4px;
+}
+.welcome-text p {
+  color: #646473;
+  font-size: 14px;
+}
+
+/* Stats Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.stat-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #eaeaef;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.stat-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #646473;
+  letter-spacing: 0.5px;
+}
+.stat-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+.blue-badge { background-color: #e5edff; color: #3b82f6; }
+.red-badge { background-color: #ffe5e5; color: #ef4444; }
+.green-badge { background-color: #e5ffe8; color: #22c55e; }
+
+.stat-progress-bar {
+  height: 6px;
+  background-color: #f0f0f4;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 3px; }
+.blue-fill { background-color: #3b82f6; }
+.green-fill { background-color: #22c55e; }
+
+.stat-subtitle {
+  font-size: 12px;
+  color: #8c8c9a;
+}
+.stat-icon {
+  color: #8c8c9a;
+}
+
+.stat-value-group {
+  display: flex;
+  flex-direction: column;
+}
+.stat-main-val {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a24;
+}
+.stat-sub-val {
+  font-size: 13px;
+  color: #646473;
+  margin-top: 2px;
+}
+
+/* Quick Actions */
+.quick-actions-section {
+  margin-bottom: 30px;
+}
+.quick-actions-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a24;
+  margin-bottom: 16px;
+}
+.quick-actions-grid {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.quick-action-card {
+  background-color: #ffffff;
+  border: 1px solid #eaeaef;
+  border-radius: 12px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: max-content;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.quick-action-card:hover {
+  border-color: #c9c9d8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.qa-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qa-icon-wrapper.blue { background-color: #e5edff; color: #3b82f6; }
+.qa-icon-wrapper.orange { background-color: #fff0e5; color: #f97316; }
+.qa-icon-wrapper.purple { background-color: #f3e5ff; color: #a855f7; }
+.qa-icon-wrapper.green { background-color: #e5ffe8; color: #22c55e; }
+.qa-icon-wrapper.gray { background-color: #f4f4f7; color: #646473; }
+
+.quick-action-card span {
+  font-weight: 500;
+  font-size: 14px;
+  color: #1a1a24;
+}
+
+/* ======================================= */
+
+/* Fee Alert Card */
+.fee-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+}
+.fee-header h2 { font-size: 17px; font-weight: 700; color: #8b0000; }
+.urgent-badge {
+  background-color: #cc0000;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.fee-alert-card > p {
+  font-size: 13px;
+  color: #cc3333;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 2;
+}
+.fee-amount {
+  font-size: 30px;
+  font-weight: 800;
+  color: #8b0000;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+}
+.pay-now-btn {
+  background-color: #8b0000;
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  transition: background-color 0.2s;
+}
+.pay-now-btn:hover { background-color: #6d0000; }
+.watermark-icon {
+  position: absolute;
+  right: -16px;
+  top: 10px;
+  color: rgba(200, 0, 0, 0.08);
+  z-index: 1;
+}
+
+/* Room Details */
+.room-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.room-icon {
+  width: 48px;
+  height: 48px;
+  background-color: #f4f4f7;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #505060;
+  flex-shrink: 0;
+}
+.room-number h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.room-specs {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.room-specs li { display: flex; justify-content: space-between; font-size: 13px; }
+.room-specs li span { color: #646473; }
+.room-specs li strong { color: #1a1a24; font-weight: 600; }
+
+/* Notice Board */
+.notice-list { display: flex; flex-direction: column; gap: 12px; }
+.notice-item { border: 1px solid #eaeaef; border-radius: 8px; padding: 14px; }
+.notice-top  { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.notice-top h4 { font-size: 13px; font-weight: 600; color: #1a1a24; }
+.time          { font-size: 11px; color: #8c8c9a; }
+.notice-item p { font-size: 12px; color: #646473; line-height: 1.4; }
+
+/* Leave Requests */
+.leave-list { display: flex; flex-direction: column; gap: 12px; }
+.leave-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #eaeaef;
+  border-radius: 8px;
+  padding: 14px;
+}
+.leave-info h4 { font-size: 13px; font-weight: 600; color: #1a1a24; margin-bottom: 2px; }
+.dates { font-size: 12px; color: #646473; }
