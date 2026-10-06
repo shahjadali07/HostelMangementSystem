@@ -102,7 +102,15 @@ export default function AdminDashboard() {
                 <p>{mod.desc}</p>
               </div>
             </div>
-            <button className="module-btn" onClick={() => mod.path && navigate(mod.path)}>
+            <button className="module-btn" onClick={() => {
+              if (mod.path) {
+                if (mod.id === 'wardens') {
+                  window.open(mod.path, '_blank', 'noopener,noreferrer');
+                } else {
+                  navigate(mod.path);
+                }
+              }
+            }}>
               Manage <ChevronRight size={16} />
             </button>
           </div>

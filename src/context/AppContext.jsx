@@ -5,18 +5,17 @@ export const useApp = () => useContext(AppContext);
 
 // ─── Static Hostel Data ────────────────────────────────────────────────────
 export const HOSTELS = [
-  { id: 'raman',        name: 'Raman Bhawan',        category: 'BOYS',   students: 420 },
-  { id: 'subhash',      name: 'Subhash Bhawan',       category: 'BOYS',   students: 380 },
-  { id: 'visveswaraya', name: 'Visveswaraya Bhawan',  category: 'BOYS',   students: 360 },
-  { id: 'tagore',       name: 'Tagore Bhawan',        category: 'BOYS',   students: 400 },
-  { id: 'ambedkar',     name: 'Ambedkar Bhawan',      category: 'BOYS',   students: 350 },
-  { id: 'tilak',        name: 'Tilak Bhawan',         category: 'BOYS',   students: 300 },
-  { id: 'ramanujam',    name: 'Ramanujam Bhawan',     category: 'BOYS',   students: 320 },
-  { id: 'saraswati',    name: 'Saraswati Bhawan',     category: 'GIRLS',  students: 280 },
-  { id: 'sarojini',     name: 'Sarojini Bhawan',      category: 'GIRLS',  students: 260 },
-  { id: 'kalpana',      name: 'Kalpana Bhawan',       category: 'GIRLS',  students: 240 },
-  { id: 'kasturba',     name: 'Kasturba Bhawan',      category: 'GIRLS',  students: 220 },
-  { id: 'newgirls',     name: 'New Girls Hostel',     category: 'GIRLS',  students: 200 },
+  { id: 'raman-bhawan', name: 'Raman Bhawan', category: 'BOYS', capacity: 500 },
+  { id: 'subhash-bhawan', name: 'Subhash Bhawan', category: 'BOYS', capacity: 455 },
+  { id: 'visvesvaraya-bhawan', name: 'Visvesvaraya Bhawan', category: 'BOYS', capacity: 320 },
+  { id: 'ramanujam-bhawan', name: 'Ramanujam Bhawan', category: 'BOYS', capacity: 324 },
+  { id: 'tagore-bhawan', name: 'Tagore Bhawan', category: 'BOYS', capacity: 240 },
+  { id: 'ambedkar-bhawan', name: 'Ambedkar Bhawan', category: 'BOYS', capacity: 230 },
+  { id: 'tilak-bhawan', name: 'Tilak Bhawan', category: 'BOYS', capacity: 152 },
+  { id: 'saraswati-bhawan', name: 'Saraswati Bhawan', category: 'GIRLS', capacity: 266 },
+  { id: 'kalpana-chawla-bhawan', name: 'Kalpana Chawla Bhawan', category: 'GIRLS', capacity: 144 },
+  { id: 'sarojini-bhawan', name: 'Sarojini Bhawan', category: 'GIRLS', capacity: 140 },
+  { id: 'kasturba-bhawan', name: 'Kasturba Bhawan', category: 'GIRLS', capacity: 140 },
 ];
 
 export const AppProvider = ({ children }) => {
@@ -44,64 +43,46 @@ export const AppProvider = ({ children }) => {
     fetchApplications();
   };
 
-  const updateApplicationStatus = (appId, newStatus) => {
-    // Ideally this should also call a PUT /api/applications/:id/status
-    // For now we'll just update local state to preserve UI functionality if API isn't built yet
-    setApplications(prev => prev.map(app => app.id === appId ? { ...app, status: newStatus } : app));
+  const updateApplicationStatus = async (appId, newStatus, rejectionReason = '', correctionMessage = '') => {
+    try {
+      const res = await fetch(`/api/applications/${appId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, rejectionReason, correctionMessage })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setApplications(prev => prev.map(app => app.id === appId ? { ...app, status: newStatus, rejectionReason, correctionMessage } : app));
+        return { success: true };
+      } else {
+        return { success: false, error: data.message };
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      return { success: false, error: err.message };
+    }
   };
 
   const getNewApplicationsCount = () => applications.filter(a => a.status === 'NEW').length;
 
   // ─── Wardens ───────────────────────────────────────────────────────────
-  // Simulated warden accounts (acts as our User + WardenProfile tables)
-  const [wardens, setWardens] = useState([
-    {
-      id: 'w-001',
-      fullName: 'Dr. Anita Sharma',
-      email: 'warden.raman1@hostel.edu',
-      phone: '9811001100',
-      employeeId: 'EMP-101',
-      designation: 'Chief Warden',
-      hostelId: 'raman',
-      position: 'WARDEN_1',
-      status: 'ACTIVE',
-      username: 'warden.raman1@hostel.edu',
-      // password stored as plain-text mock (in real app use bcrypt)
-      passwordHash: 'Warden@123',
-      role: 'WARDEN',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'w-002',
-      fullName: 'Mr. Ravi Menon',
-      email: 'warden.raman2@hostel.edu',
-      phone: '9811002200',
-      employeeId: 'EMP-102',
-      designation: 'Resident Warden',
-      hostelId: 'raman',
-      position: 'WARDEN_2',
-      status: 'ACTIVE',
-      username: 'warden.raman2@hostel.edu',
-      passwordHash: 'Warden@456',
-      role: 'WARDEN',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'w-003',
-      fullName: 'Ms. Priya Nair',
-      email: 'warden.saraswati1@hostel.edu',
-      phone: '9811003300',
-      employeeId: 'EMP-103',
-      designation: 'Chief Warden',
-      hostelId: 'saraswati',
-      position: 'WARDEN_1',
-      status: 'ACTIVE',
-      username: 'warden.saraswati1@hostel.edu',
-      passwordHash: 'Warden@789',
-      role: 'WARDEN',
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+  const [wardens, setWardens] = useState([]);
+
+  React.useEffect(() => {
+    fetchWardens();
+  }, []);
+
+  const fetchWardens = async () => {
+    try {
+      const res = await fetch('/api/admin/wardens');
+      if (res.ok) {
+        const data = await res.json();
+        setWardens(data);
+      }
+    } catch (err) {
+      console.error('Error fetching wardens:', err);
+    }
+  };
 
   // Currently logged-in warden (set on login)
   const [currentWarden, setCurrentWarden] = useState(null);
@@ -112,82 +93,126 @@ export const AppProvider = ({ children }) => {
   const getActiveWardenCountByHostel = (hostelId) =>
     wardens.filter(w => w.hostelId === hostelId && w.status === 'ACTIVE').length;
 
-  const addWarden = (wardenData) => {
-    // Validate 2-warden limit
-    const activeCount = getActiveWardenCountByHostel(wardenData.hostelId);
-    if (activeCount >= 2) {
-      return { success: false, error: 'Maximum 2 active wardens can be assigned to this hostel.' };
-    }
-    // Check position conflict
-    const positionTaken = wardens.some(
-      w => w.hostelId === wardenData.hostelId && w.position === wardenData.position && w.status === 'ACTIVE'
-    );
-    if (positionTaken) {
-      return { success: false, error: `${wardenData.position === 'WARDEN_1' ? 'Warden 1' : 'Warden 2'} position is already taken in this hostel.` };
-    }
-    // Check email uniqueness
-    if (wardens.some(w => w.email === wardenData.email)) {
-      return { success: false, error: 'A warden with this email already exists.' };
-    }
-    // Check employeeId uniqueness
-    if (wardens.some(w => w.employeeId === wardenData.employeeId)) {
-      return { success: false, error: 'Employee ID already in use.' };
-    }
-
-    const newWarden = {
-      ...wardenData,
-      id: `w-${Date.now()}`,
-      role: 'WARDEN',
-      username: wardenData.email,
-      createdAt: new Date().toISOString(),
-    };
-    setWardens(prev => [...prev, newWarden]);
-    return { success: true, warden: newWarden };
-  };
-
-  const updateWarden = (wardenId, updatedData) => {
-    // If changing hostel, validate new hostel's limit
-    const original = wardens.find(w => w.id === wardenId);
-    if (updatedData.hostelId && updatedData.hostelId !== original.hostelId) {
-      const activeCount = getActiveWardenCountByHostel(updatedData.hostelId);
-      if (activeCount >= 2) {
-        return { success: false, error: 'Destination hostel already has 2 active wardens.' };
+  const addWarden = async (wardenData) => {
+    try {
+      const res = await fetch('/api/admin/wardens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(wardenData)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWardens(prev => [...prev, data.warden]);
+        return { success: true, warden: data.warden };
       }
+      return { success: false, error: data.message || 'Error creating warden' };
+    } catch (err) {
+      console.error('Error adding warden:', err);
+      return { success: false, error: 'Network error creating warden' };
     }
-    setWardens(prev => prev.map(w => w.id === wardenId ? { ...w, ...updatedData } : w));
-    return { success: true };
   };
 
-  const deleteWarden = (wardenId) => {
-    // Soft delete: set status to DELETED
-    setWardens(prev => prev.map(w => w.id === wardenId ? { ...w, status: 'DELETED' } : w));
-    return { success: true };
+  const updateWarden = async (wardenId, updatedData) => {
+    try {
+      const res = await fetch(`/api/admin/wardens/${wardenId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWardens(prev => prev.map(w => w.id === wardenId ? { ...w, ...updatedData } : w));
+        return { success: true };
+      }
+      return { success: false, error: data.message || 'Error updating warden' };
+    } catch (err) {
+      console.error('Error updating warden:', err);
+      return { success: false, error: 'Network error updating warden' };
+    }
   };
 
-  const toggleWardenStatus = (wardenId) => {
-    setWardens(prev => prev.map(w =>
-      w.id === wardenId ? { ...w, status: w.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' } : w
-    ));
+  const deleteWarden = async (wardenId) => {
+    try {
+      const res = await fetch(`/api/admin/wardens/${wardenId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWardens(prev => prev.map(w => w.id === wardenId ? { ...w, status: 'DELETED' } : w));
+        return { success: true };
+      }
+      return { success: false, error: data.message || 'Error deleting warden' };
+    } catch (err) {
+      console.error('Error deleting warden:', err);
+      return { success: false, error: 'Network error deleting warden' };
+    }
   };
 
-  const resetWardenPassword = (wardenId, newPassword) => {
-    setWardens(prev => prev.map(w => w.id === wardenId ? { ...w, passwordHash: newPassword } : w));
-    return { success: true };
+  const toggleWardenStatus = async (wardenId) => {
+    const warden = wardens.find(w => w.id === wardenId);
+    if (!warden) return { success: false, error: 'Warden not found' };
+    const newStatus = warden.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    try {
+      const res = await fetch(`/api/admin/wardens/${wardenId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWardens(prev => prev.map(w => w.id === wardenId ? { ...w, status: newStatus } : w));
+        return { success: true };
+      }
+      return { success: false, error: data.message || 'Error updating status' };
+    } catch (err) {
+      console.error('Error updating status:', err);
+      return { success: false, error: 'Network error updating status' };
+    }
+  };
+
+  const resetWardenPassword = async (wardenId, newPassword) => {
+    try {
+      const res = await fetch(`/api/admin/wardens/${wardenId}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        return { success: true };
+      }
+      return { success: false, error: data.message || 'Error resetting password' };
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      return { success: false, error: 'Network error resetting password' };
+    }
   };
 
   // Called from Login page to authenticate a warden
-  const loginWarden = (email, password) => {
-    const warden = wardens.find(
-      w => w.email === email && w.passwordHash === password && w.role === 'WARDEN' && w.status === 'ACTIVE'
-    );
-    if (warden) {
-      setCurrentWarden(warden);
-      return { success: true, warden };
+  const loginWarden = async (email, password) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('wardenToken', data.token);
+        setCurrentWarden(data.user);
+        return { success: true, warden: data.user };
+      }
+      return { success: false, error: data.message || 'Invalid credentials' };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: 'Network error' };
     }
-    return { success: false };
   };
 
-  const logoutWarden = () => setCurrentWarden(null);
+  const logoutWarden = () => {
+    localStorage.removeItem('wardenToken');
+    setCurrentWarden(null);
+  };
 
   return (
     <AppContext.Provider value={{

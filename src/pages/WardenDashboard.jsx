@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { useApp, HOSTELS } from '../context/AppContext';
 import {
@@ -9,19 +10,109 @@ import './WardenDashboard.css';
 
 export default function WardenDashboard() {
   const { currentWarden } = useApp();
-  const hostel = currentWarden ? HOSTELS.find(h => h.id === currentWarden.hostelId) : null;
-  const wardenName = currentWarden ? currentWarden.fullName : 'Warden';
+  const hostel = currentWarden ? HOSTELS.find(h => h.id === currentWarden.assignedHostel || h.id === currentWarden.hostelId) : null;
+  const wardenName = currentWarden ? currentWarden.name || currentWarden.fullName : 'Warden';
   const hostelName = hostel ? hostel.name : 'Assigned Hostel';
-  const position = currentWarden?.position === 'WARDEN_1' ? 'Warden 1' : 'Warden 2';
+  const position = currentWarden?.position === 'WARDEN_1' ? 'Warden 1' : 'Warden';
+
+  const navigate = useNavigate();
+  const [assignedApps, setAssignedApps] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [recentLeaves, setRecentLeaves] = useState([]);
+  const [recentComplaints, setRecentComplaints] = useState([]);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Good Morning';
+    if (hour >= 12 && hour < 17) return 'Good Afternoon';
+    if (hour >= 17 && hour < 21) return 'Good Evening';
+    return 'Good Night';
+  };
+
+  useEffect(() => {
+    if (currentWarden) {
+      fetchApplications();
+      fetchDashboardData();
+    }
+  }, [currentWarden]);
+
+  const fetchApplications = async () => {
+    try {
+      const res = await fetch(`/api/applications/warden/by-email/approved?email=${encodeURIComponent(currentWarden.email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAssignedApps(data);
+      }
+    } catch (err) {
+      console.error('Error fetching applications:', err);
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('wardenToken');
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      // Fetch Stats
+      const statsRes = await fetch('/api/warden/dashboard-stats', { headers });
+      if (statsRes.ok) setStats(await statsRes.json());
+
+      // Fetch Leaves
+      const leavesRes = await fetch('/api/warden/leave-requests', { headers });
+      if (leavesRes.ok) {
+        const leaves = await leavesRes.json();
+        setRecentLeaves(leaves.slice(0, 3));
+      }
+
+      // Fetch Complaints
+      const compRes = await fetch('/api/warden/complaints', { headers });
+      if (compRes.ok) {
+        const comps = await compRes.json();
+        setRecentComplaints(comps.slice(0, 3));
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="welcome-section">
-        <h1>Good Morning, {wardenName} 👋</h1>
+        <h1>{getGreeting()}, {wardenName} 👋</h1>
         <p>
-          <Shield size={14} style={{display:'inline',marginRight:4,color:'#9333ea'}}/>
-          {position} — <strong>{hostelName}</strong>
+          <strong>{hostelName}</strong> — Warden: {wardenName}
         </p>
+      </div>
+
+      {/* Pending Applications Card */}
+      <div className="stats-row" style={{ marginBottom: '2rem' }}>
+        <div className="stat-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid #e2e8f0', backgroundColor: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4338ca' }}>
+            <FileText size={24} />
+            <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Pending Applications</h2>
+          </div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#0f172a' }}>
+            {assignedApps.length}
+          </div>
+          <p style={{ margin: 0, color: '#64748b' }}>
+            Applications awaiting hostel/bed allocation
+          </p>
+          <button 
+            onClick={() => navigate('/warden/applications')}
+            style={{ 
+              marginTop: 'auto', 
+              padding: '0.75rem', 
+              backgroundColor: '#4338ca', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              fontWeight: '600' 
+            }}
+          >
+            View Applications
+          </button>
+        </div>
       </div>
 
       {/* Stats Row */}
@@ -32,7 +123,7 @@ export default function WardenDashboard() {
           </div>
           <div className="stat-details">
             <span className="stat-title">TOTAL STUDENTS</span>
-            <span className="stat-value">{hostel?.students || 450}</span>
+            <span className="stat-value">{stats ? stats.totalStudents : '-'}</span>
             <span className="stat-subtitle">In {hostelName}</span>
           </div>
         </div>
@@ -43,7 +134,7 @@ export default function WardenDashboard() {
           </div>
           <div className="stat-details">
             <span className="stat-title">LEAVE REQUESTS</span>
-            <span className="stat-value">12</span>
+            <span className="stat-value">{stats ? stats.pendingLeaves : '-'}</span>
             <span className="stat-subtitle red-text">⚠ Pending</span>
           </div>
         </div>
@@ -54,7 +145,7 @@ export default function WardenDashboard() {
           </div>
           <div className="stat-details">
             <span className="stat-title">COMPLAINTS</span>
-            <span className="stat-value">8</span>
+            <span className="stat-value">{stats ? stats.pendingComplaints : '-'}</span>
             <span className="stat-subtitle red-text">⚠ Open</span>
           </div>
         </div>
@@ -64,188 +155,101 @@ export default function WardenDashboard() {
             <CheckCircle size={20} />
           </div>
           <div className="stat-details">
-            <span className="stat-title">RESOLVED</span>
-            <span className="stat-value">38</span>
-            <span className="stat-subtitle blue-text">This week</span>
+            <span className="stat-title">STUDENTS OUTSIDE</span>
+            <span className="stat-value">{stats ? stats.studentsOutside : '-'}</span>
+            <span className="stat-subtitle blue-text">Current</span>
           </div>
         </div>
       </div>
 
       {/* Bento Grid */}
       <div className="warden-grid">
+        
         {/* Pending Approvals */}
         <div className="warden-card approvals-card">
           <div className="card-header">
-            <h2>Pending Approvals</h2>
-            <button className="text-btn">View All <ChevronRight size={14}/></button>
+            <h2>Recent Leave Requests</h2>
+            <button className="text-btn" onClick={() => navigate('/warden/leave-requests')}>View All <ChevronRight size={14}/></button>
           </div>
           <div className="approval-list">
-            <div className="approval-item">
-              <div className="approval-avatar purple-avatar">JS</div>
-              <div className="approval-info">
-                <h4>Leave Request — John Smith</h4>
-                <p>Room 102 · Medical emergency · Oct 15–20</p>
-                <span className="time-ago">Requested 2 hrs ago</span>
-              </div>
-              <div className="approval-actions">
-                <button className="approve-btn">Approve</button>
-                <button className="reject-btn">Reject</button>
-              </div>
-            </div>
-            <div className="approval-item">
-              <div className="approval-avatar blue-avatar">AJ</div>
-              <div className="approval-info">
-                <h4>Room Change — Alex Johnson</h4>
-                <p>Room 304 · Moving with study partner</p>
-                <span className="time-ago">Requested yesterday</span>
-              </div>
-              <div className="approval-actions">
-                <button className="approve-btn">Approve</button>
-                <button className="reject-btn">Reject</button>
-              </div>
-            </div>
-            <div className="approval-item">
-              <div className="approval-avatar orange-avatar">PK</div>
-              <div className="approval-info">
-                <h4>Leave Request — Priya Kumar</h4>
-                <p>Room 210 · Family function · Oct 20–22</p>
-                <span className="time-ago">Requested 5 hrs ago</span>
-              </div>
-              <div className="approval-actions">
-                <button className="approve-btn">Approve</button>
-                <button className="reject-btn">Reject</button>
-              </div>
-            </div>
+            {recentLeaves.length === 0 ? (
+              <p style={{padding: '1rem', color: '#64748b'}}>No recent leave requests.</p>
+            ) : (
+              recentLeaves.map(leave => (
+                <div key={leave._id} className="approval-item">
+                  <div className="approval-avatar purple-avatar">{leave.studentId?.name?.charAt(0) || 'S'}</div>
+                  <div className="approval-info">
+                    <h4>{leave.studentId?.name || 'Student'} — {leave.leaveType}</h4>
+                    <p>{new Date(leave.startDate).toLocaleDateString()} to {new Date(leave.endDate).toLocaleDateString()}</p>
+                    <span className="time-ago">Status: {leave.status}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Room Occupancy */}
+        {/* Hostel Capacity */}
         <div className="warden-card occupancy-card">
           <div className="card-header">
-            <h2>Room Occupancy</h2>
-            <button className="more-btn"><MoreVertical size={18}/></button>
+            <h2 style={{ textTransform: 'uppercase' }}>Hostel Capacity</h2>
           </div>
-          <div className="occupancy-stats">
-            <div className="occ-item">
-              <div className="occ-bar-wrapper">
-                <div className="occ-bar" style={{width: '88%', background: '#5142f5'}}></div>
+          {stats ? (
+            <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#0f172a' }}>
+                {hostel ? hostel.capacity : stats.officialCapacity}
               </div>
-              <div className="occ-labels">
-                <span>Block A</span>
-                <strong>88%</strong>
+              <div style={{ color: '#64748b', marginBottom: '1rem' }}>
+                Total Beds
               </div>
-            </div>
-            <div className="occ-item">
-              <div className="occ-bar-wrapper">
-                <div className="occ-bar" style={{width: '72%', background: '#3b82f6'}}></div>
+              
+              <div style={{ fontSize: '1rem', color: '#334155' }}>
+                <strong>Occupied:</strong> {stats.occupiedBeds}
               </div>
-              <div className="occ-labels">
-                <span>Block B</span>
-                <strong>72%</strong>
+              <div style={{ fontSize: '1rem', color: '#334155' }}>
+                <strong>Available:</strong> {(hostel ? hostel.capacity : stats.officialCapacity) - stats.occupiedBeds}
               </div>
-            </div>
-            <div className="occ-item">
-              <div className="occ-bar-wrapper">
-                <div className="occ-bar" style={{width: '95%', background: '#f59e0b'}}></div>
-              </div>
-              <div className="occ-labels">
-                <span>Block C</span>
-                <strong>95%</strong>
+              <div style={{ fontSize: '1rem', color: '#334155' }}>
+                <strong>Occupancy:</strong> {(((stats.occupiedBeds) / (hostel ? hostel.capacity : stats.officialCapacity)) * 100 || 0).toFixed(1)}%
               </div>
             </div>
-            <div className="occ-item">
-              <div className="occ-bar-wrapper">
-                <div className="occ-bar" style={{width: '60%', background: '#10b981'}}></div>
-              </div>
-              <div className="occ-labels">
-                <span>Block D</span>
-                <strong>60%</strong>
-              </div>
-            </div>
-          </div>
-          <div className="occ-summary">
-            <div className="occ-sum-item">
-              <span className="occ-sum-value">420</span>
-              <span className="occ-sum-label">Occupied</span>
-            </div>
-            <div className="occ-sum-item">
-              <span className="occ-sum-value">80</span>
-              <span className="occ-sum-label">Vacant</span>
-            </div>
-            <div className="occ-sum-item">
-              <span className="occ-sum-value">500</span>
-              <span className="occ-sum-label">Total Beds</span>
-            </div>
-          </div>
+          ) : (
+            <div style={{ marginTop: '2rem', textAlign: 'center', color: '#64748b' }}>Loading capacity...</div>
+          )}
         </div>
 
         {/* Recent Complaints */}
         <div className="warden-card complaints-wide-card">
           <div className="card-header">
             <h2>Recent Complaints</h2>
-            <button className="text-btn">View All <ChevronRight size={14}/></button>
+            <button className="text-btn" onClick={() => navigate('/warden/complaints')}>View All <ChevronRight size={14}/></button>
           </div>
           <table className="custom-table">
             <thead>
               <tr>
-                <th>TICKET ID</th>
                 <th>STUDENT</th>
                 <th>CATEGORY</th>
                 <th>DATE</th>
                 <th>STATUS</th>
-                <th>ACTION</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="highlight-left">#CPL-1042</td>
-                <td>John Smith</td>
-                <td>Electrical — Fan not working</td>
-                <td>Today, 09:30 AM</td>
-                <td><span className="badge-warning">Pending</span></td>
-                <td><button className="table-action-btn">Assign</button></td>
-              </tr>
-              <tr>
-                <td className="highlight-left-blue">#CPL-1041</td>
-                <td>Sarah Lee</td>
-                <td>Plumbing — Leaking tap</td>
-                <td>Yesterday</td>
-                <td><span className="badge-info">In Progress</span></td>
-                <td><button className="table-action-btn">View</button></td>
-              </tr>
-              <tr>
-                <td className="highlight-left-green">#CPL-1040</td>
-                <td>Raj Patel</td>
-                <td>Internet — Slow WiFi</td>
-                <td>12 Oct 2023</td>
-                <td><span className="badge-gray">Resolved</span></td>
-                <td><button className="table-action-btn">View</button></td>
-              </tr>
+              {recentComplaints.length === 0 ? (
+                <tr><td colSpan="4" style={{textAlign: 'center', padding: '1rem'}}>No recent complaints.</td></tr>
+              ) : (
+                recentComplaints.map(comp => (
+                  <tr key={comp._id}>
+                    <td>{comp.studentId?.name || 'Student'}</td>
+                    <td>{comp.category}</td>
+                    <td>{new Date(comp.createdAt).toLocaleDateString()}</td>
+                    <td><span className={`badge-${comp.status === 'Resolved' ? 'info' : 'warning'}`}>{comp.status}</span></td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Attendance Overview */}
-        <div className="warden-card attendance-card">
-          <div className="card-header">
-            <h2><BedDouble size={18} className="purple-text"/> Tonight's Attendance</h2>
-            <span className="date-badge">Oct 13, 2023</span>
-          </div>
-          <div className="attendance-summary">
-            <div className="att-item present">
-              <span className="att-count">412</span>
-              <span className="att-label">Present</span>
-            </div>
-            <div className="att-item absent">
-              <span className="att-count">28</span>
-              <span className="att-label">On Leave</span>
-            </div>
-            <div className="att-item pending">
-              <span className="att-count">10</span>
-              <span className="att-label">Unaccounted</span>
-            </div>
-          </div>
-        </div>
       </div>
     </DashboardLayout>
   );

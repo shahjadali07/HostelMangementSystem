@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const hostelApplicationSchema = new mongoose.Schema({
   studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   id: { type: String, required: true, unique: true }, // e.g., HMS-2026-0001
-  status: { type: String, enum: ['NEW', 'UNDER REVIEW', 'APPROVED', 'REJECTED'], default: 'NEW' },
+  status: { type: String, enum: ['NEW', 'UNDER REVIEW', 'APPROVED', 'ASSIGNED TO WARDEN', 'REJECTED', 'FORWARDED_TO_WARDEN', 'BED_ALLOCATION_PENDING', 'BED_ALLOCATED', 'CANCELLED'], default: 'NEW' },
   submittedAt: { type: Date, default: Date.now },
 
   // Personal Info
@@ -38,6 +38,20 @@ const hostelApplicationSchema = new mongoose.Schema({
   signatureUrl: { type: String },
   aadhaarDocUrl: { type: String },
   otherDocumentsUrls: [{ type: String }],
+  
+  // Review Metadata
+  rejectionReason: { type: String },
+  correctionMessage: { type: String },
+  reviewedDate: { type: Date },
+  reviewedBy: { type: String },
+
+  // Assignment Metadata
+  hostelAssignmentStatus: { type: String, enum: ['Pending', 'Assigned', 'Allocated'], default: 'Pending' },
+  assignedHostel: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' },
+  assignedWarden: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  assignedRoom: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
+  assignedBed: { type: String },
+  assignedAt: { type: Date }
 });
 
 const HostelApplication = mongoose.model('HostelApplication', hostelApplicationSchema);

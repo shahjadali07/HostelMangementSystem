@@ -318,3 +318,4 @@
 }
 .leave-info h4 { font-size: 13px; font-weight: 600; color: #1a1a24; margin-bottom: 2px; }
 .dates { font-size: 12px; color: #646473; }
+.pending-application-banner { background-color: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px; } .pending-application-banner h2 { font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 8px; } .pending-application-banner p { font-size: 14px; color: #4b5563; } .pending-application-banner button { margin-left: auto; margin-right: auto; }

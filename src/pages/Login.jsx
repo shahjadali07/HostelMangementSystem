@@ -22,21 +22,51 @@ export default function Login() {
   const navigate = useNavigate();
   const { loginWarden } = useApp();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
     if (selectedRole === 'student') {
-      navigate('/student');
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          localStorage.setItem('studentToken', data.token);
+          // Check application status
+          const statusRes = await fetch('/api/student/application/status', {
+            headers: { 'Authorization': `Bearer ${data.token}` }
+          });
+          const statusData = await statusRes.json();
+          if (statusRes.ok && statusData.hasApplication) {
+            navigate('/student');
+          } else {
+            navigate('/student/register');
+          }
+        } else {
+          setLoginError(data.message || 'Invalid student credentials.');
+        }
+      } catch (err) {
+        setLoginError('Network error during login.');
+      }
+
     } else if (selectedRole === 'warden') {
       // Authenticate via context
-      const result = loginWarden(email, password);
+      const result = await loginWarden(email, password);
       if (result.success) {
         navigate('/warden');
       } else {
-        setLoginError('Invalid warden credentials or account inactive. Please check your email and password.');
+        setLoginError(result.error || 'Invalid warden credentials or account inactive.');
       }
     } else if (selectedRole === 'admin') {
-      navigate('/admin');
+      if (email === 'mmmut.admin@gmail.com' && password === 'Shajju@123') {
+        navigate('/admin');
+      } else {
+        setLoginError('Invalid admin credentials.');
+      }
     }
   };
 
@@ -113,10 +143,12 @@ export default function Login() {
             </Button>
           </form>
 
-          <p className="signup-link-row">
-            New student? Don't have an account?{' '}
-            <Link to="/signup" className="signup-link">Register Here →</Link>
-          </p>
+          {selectedRole === 'student' && (
+            <p className="signup-link-row">
+              New student? Don't have an account?{' '}
+              <Link to="/register" className="signup-link">Register Here →</Link>
+            </p>
+          )}
 
         </div>
       </div>

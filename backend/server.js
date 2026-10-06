@@ -5,6 +5,12 @@ import cors from 'cors';
 import dns from 'dns';
 
 import applicationRoutes from './routes/applicationRoutes.js';
+import roomRoutes from './routes/roomRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
+import hostelRoutes from './routes/hostelRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import wardenPanelRoutes from './routes/wardenPanelRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -31,6 +37,12 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/applications', applicationRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/hostels', hostelRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/warden', wardenPanelRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

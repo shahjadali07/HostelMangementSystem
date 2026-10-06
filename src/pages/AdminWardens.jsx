@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { useApp, HOSTELS } from '../context/AppContext';
 import {
   ShieldCheck, Plus, Edit2, Trash2, Eye, EyeOff, RotateCcw,
-  X, Check, AlertTriangle, ChevronDown, Search, Filter, User
+  X, Check, AlertTriangle, ChevronDown, Search, Filter, User, Building
 } from 'lucide-react';
 import './AdminWardens.css';
 
@@ -35,11 +36,11 @@ function PositionBadge({ position }) {
 }
 
 // ─── Add / Edit Warden Modal ──────────────────────────────────────────────
-function WardenModal({ initialData, defaultHostelId, onClose, onSave }) {
+export function WardenModal({ initialData, defaultHostelId, fixedHostel, onClose, onSave }) {
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '',
     employeeId: '', designation: '',
-    hostelId: defaultHostelId || '',
+    hostelId: fixedHostel ? (fixedHostel._id || fixedHostel.id) : (defaultHostelId || ''),
     position: 'WARDEN_1', status: 'ACTIVE',
     password: '', confirmPassword: '',
     ...initialData,
@@ -118,19 +119,30 @@ function WardenModal({ initialData, defaultHostelId, onClose, onSave }) {
                 <label>Designation</label>
                 <input value={form.designation} onChange={e => set('designation', e.target.value)} placeholder="Chief Warden / Resident Warden" />
               </div>
-              <div className={`warden-field ${errors.hostelId ? 'error' : ''}`}>
-                <label>Hostel *</label>
-                <select value={form.hostelId} onChange={e => set('hostelId', e.target.value)}>
-                  <option value="">— Select Hostel —</option>
-                  <optgroup label="Boys' Hostels">
-                    {boysHostels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-                  </optgroup>
-                  <optgroup label="Girls' Hostels">
-                    {girlsHostels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-                  </optgroup>
-                </select>
-                {errors.hostelId && <span className="field-error">{errors.hostelId}</span>}
-              </div>
+              {fixedHostel ? (
+                <div className="warden-field">
+                  <label>Hostel</label>
+                  <div style={{ padding: '0.6rem 0.8rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Building size={16} style={{ color: '#4338ca' }} />
+                    <span style={{ fontWeight: '500' }}>{fixedHostel.name}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: 'auto' }}>Automatically assigned</span>
+                  </div>
+                </div>
+              ) : (
+                <div className={`warden-field ${errors.hostelId ? 'error' : ''}`}>
+                  <label>Hostel *</label>
+                  <select value={form.hostelId} onChange={e => set('hostelId', e.target.value)}>
+                    <option value="">— Select Hostel —</option>
+                    <optgroup label="Boys' Hostels">
+                      {boysHostels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                    </optgroup>
+                    <optgroup label="Girls' Hostels">
+                      {girlsHostels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                    </optgroup>
+                  </select>
+                  {errors.hostelId && <span className="field-error">{errors.hostelId}</span>}
+                </div>
+              )}
               <div className="warden-field">
                 <label>Warden Position *</label>
                 <select value={form.position} onChange={e => set('position', e.target.value)}>
@@ -244,8 +256,10 @@ function DeleteModal({ warden, onClose, onConfirm }) {
 }
 
 // ─── Warden Card ──────────────────────────────────────────────────────────
-function WardenCard({ warden, onEdit, onDelete, onToggleStatus, onResetPw }) {
-  const hostel = HOSTELS.find(h => h.id === warden.hostelId);
+export function WardenCard({ warden, onManage }) {
+  const { wardens } = useApp(); // To make sure useApp is imported, wait we have HOSTELS in context
+  const hostel = warden.hostel || HOSTELS.find(h => h.id === warden.hostelId || h._id === warden.hostelId);
+  const hostelName = hostel ? hostel.name : 'Unknown Hostel';
   return (
     <div className="warden-card">
       <div className="warden-card-header">
@@ -265,15 +279,12 @@ function WardenCard({ warden, onEdit, onDelete, onToggleStatus, onResetPw }) {
         <div className="wcd-item"><span>Email</span><p>{warden.email}</p></div>
         <div className="wcd-item"><span>Phone</span><p>{'*'.repeat(6) + warden.phone.slice(-4)}</p></div>
         <div className="wcd-item"><span>Employee ID</span><p>{warden.employeeId}</p></div>
-        <div className="wcd-item"><span>Hostel</span><p>{hostel?.name}</p></div>
+        <div className="wcd-item"><span>Hostel</span><p>{hostelName}</p></div>
       </div>
       <div className="warden-card-actions">
-        <button className="wca-btn wca-edit" onClick={() => onEdit(warden)}><Edit2 size={14} /> Edit</button>
-        <button className="wca-btn wca-toggle" onClick={() => onToggleStatus(warden.id)}>
-          {warden.status === 'ACTIVE' ? <><EyeOff size={14} /> Deactivate</> : <><Eye size={14} /> Activate</>}
+        <button className="wca-btn wca-edit" onClick={() => onManage(warden.id)} style={{ width: '100%', justifyContent: 'center' }}>
+          <Edit2 size={14} /> Manage
         </button>
-        <button className="wca-btn wca-reset" onClick={() => onResetPw(warden)}><RotateCcw size={14} /> Reset PW</button>
-        <button className="wca-btn wca-delete" onClick={() => onDelete(warden)}><Trash2 size={14} /> Delete</button>
       </div>
     </div>
   );
@@ -281,7 +292,26 @@ function WardenCard({ warden, onEdit, onDelete, onToggleStatus, onResetPw }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────
 export default function AdminWardens() {
-  const { wardens, addWarden, updateWarden, deleteWarden, toggleWardenStatus, resetWardenPassword, getActiveWardenCountByHostel } = useApp();
+  const navigate = useNavigate();
+  const { wardens, addWarden, getActiveWardenCountByHostel } = useApp();
+
+  const [dbHostels, setDbHostels] = useState([]);
+  
+  useEffect(() => {
+    // Fetch hostels from database instead of hardcoded
+    const fetchHostels = async () => {
+      try {
+        const res = await fetch('/api/hostels');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setDbHostels(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch hostels', err);
+      }
+    };
+    fetchHostels();
+  }, []);
 
   const [selectedHostelId, setSelectedHostelId] = useState('raman');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
@@ -316,9 +346,9 @@ export default function AdminWardens() {
     return matchSearch && matchStatus && matchCategory;
   });
 
-  const handleAddWarden = (formData) => {
+  const handleAddWarden = async (formData) => {
     const hostelName = HOSTELS.find(h => h.id === formData.hostelId)?.name;
-    const result = addWarden(formData);
+    const result = await addWarden(formData);
     if (result.success) {
       setShowAddModal(false);
       showToast(`${hostelName} Warden created successfully.`);
@@ -327,40 +357,12 @@ export default function AdminWardens() {
     }
   };
 
-  const handleEditWarden = (formData) => {
-    const original = wardens.find(w => w.id === formData.id);
-    const hostelChanged = formData.hostelId !== original?.hostelId;
-    const fromName = HOSTELS.find(h => h.id === original?.hostelId)?.name;
-    const toName = HOSTELS.find(h => h.id === formData.hostelId)?.name;
-
-    if (hostelChanged && !window.confirm(`Move this warden from ${fromName} to ${toName}?`)) return;
-
-    const result = updateWarden(formData.id, formData);
-    if (result.success) {
-      setEditingWarden(null);
-      showToast(hostelChanged ? `Warden reassigned to ${toName}.` : 'Warden details updated successfully.');
-    } else {
-      showToast(result.error, 'error');
-    }
+  const handleManage = (wardenId) => {
+    navigate(`/warden?id=${wardenId}`);
   };
 
-  const handleDelete = (wardenId) => {
-    deleteWarden(wardenId);
-    showToast('Warden removed successfully.');
-  };
-
-  const handleToggle = (wardenId) => {
-    toggleWardenStatus(wardenId);
-    showToast('Warden status updated.');
-  };
-
-  const handleResetPw = (wardenId, newPassword) => {
-    resetWardenPassword(wardenId, newPassword);
-    showToast('Warden password updated successfully.');
-  };
-
-  const boysHostels = HOSTELS.filter(h => h.category === 'BOYS');
-  const girlsHostels = HOSTELS.filter(h => h.category === 'GIRLS');
+  const boysHostels = dbHostels.filter(h => h.category === 'BOYS');
+  const girlsHostels = dbHostels.filter(h => h.category === 'GIRLS');
   const isSearchMode = searchTerm.length > 0;
 
   return (
@@ -388,13 +390,13 @@ export default function AdminWardens() {
               {boysHostels.map(h => {
                 const count = getActiveWardenCountByHostel(h.id);
                 return (
-                  <div key={h.id} className={`hostel-overview-card ${selectedHostelId === h.id ? 'selected' : ''}`} onClick={() => setSelectedHostelId(h.id)}>
+                  <div key={h._id || h.id} className={`hostel-overview-card ${selectedHostelId === (h._id || h.id) ? 'selected' : ''}`} onClick={() => setSelectedHostelId(h._id || h.id)}>
                     <div className="hoc-name">{h.name}</div>
                     <div className="hoc-meta">
                       <span className={`hoc-count ${count === 2 ? 'full' : count === 0 ? 'empty' : ''}`}>Wardens: {count}/2</span>
-                      <span className="hoc-students">{h.students} Students</span>
+                      <span className="hoc-students">{h.capacity || h.students || 0} Students</span>
                     </div>
-                    <button className="hoc-manage-btn">Manage →</button>
+                    <button className="hoc-manage-btn" onClick={(e) => { e.stopPropagation(); navigate(`/admin/wardens/${h._id || h.id}`); }}>Manage →</button>
                   </div>
                 );
               })}
@@ -408,13 +410,13 @@ export default function AdminWardens() {
               {girlsHostels.map(h => {
                 const count = getActiveWardenCountByHostel(h.id);
                 return (
-                  <div key={h.id} className={`hostel-overview-card ${selectedHostelId === h.id ? 'selected' : ''}`} onClick={() => setSelectedHostelId(h.id)}>
+                  <div key={h._id || h.id} className={`hostel-overview-card ${selectedHostelId === (h._id || h.id) ? 'selected' : ''}`} onClick={() => setSelectedHostelId(h._id || h.id)}>
                     <div className="hoc-name">{h.name}</div>
                     <div className="hoc-meta">
                       <span className={`hoc-count ${count === 2 ? 'full' : count === 0 ? 'empty' : ''}`}>Wardens: {count}/2</span>
-                      <span className="hoc-students">{h.students} Students</span>
+                      <span className="hoc-students">{h.capacity || h.students || 0} Students</span>
                     </div>
-                    <button className="hoc-manage-btn">Manage →</button>
+                    <button className="hoc-manage-btn" onClick={(e) => { e.stopPropagation(); navigate(`/admin/wardens/${h._id || h.id}`); }}>Manage →</button>
                   </div>
                 );
               })}
@@ -477,10 +479,7 @@ export default function AdminWardens() {
                 <WardenCard
                   key={w.id}
                   warden={w}
-                  onEdit={setEditingWarden}
-                  onDelete={setDeletingWarden}
-                  onToggleStatus={handleToggle}
-                  onResetPw={setResetPwWarden}
+                  onManage={handleManage}
                 />
               ))}
             </div>
@@ -504,10 +503,7 @@ export default function AdminWardens() {
                 <WardenCard
                   key={w.id}
                   warden={w}
-                  onEdit={setEditingWarden}
-                  onDelete={setDeletingWarden}
-                  onToggleStatus={handleToggle}
-                  onResetPw={setResetPwWarden}
+                  onManage={handleManage}
                 />
               ))}
             </div>

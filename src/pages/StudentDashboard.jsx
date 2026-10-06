@@ -1,58 +1,195 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import HostelRegistrationForm from '../components/HostelRegistrationForm';
 import { BedDouble, Receipt, AlertTriangle, Calendar, ArrowRight, MoreVertical, Plus, CheckCircle2, CreditCard, DoorClosed, User, Building, Clock, FileText } from 'lucide-react';
 import './StudentDashboard.css';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    try {
+      const res = await fetch('/api/student/dashboard', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('studentToken') || localStorage.getItem('token')}`
+        }
+      });
+      const json = await res.json();
+      if (json.code === 'HOSTEL_REGISTRATION_REQUIRED') {
+        navigate('/student/register');
+        return;
+      }
+      if (json.success) {
+        setData(json);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f3f4f6' }}>
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ color: '#4b5563' }}>Checking application status...</h2>
+      </div>
+    </div>
+  );
+
+  const { application, roomAllocation, fee, notifications } = data || {};
+  
+  const approvedStatuses = ['APPROVED', 'ASSIGNED TO WARDEN', 'FORWARDED_TO_WARDEN', 'BED_ALLOCATION_PENDING', 'BED_ALLOCATED'];
+  const isApproved = application && approvedStatuses.includes(application.status);
+  const isRejected = application?.status === 'REJECTED';
+  const hasAllocation = !!roomAllocation;
+
+  const statusColors = {
+    'NEW': 'gray', 'PENDING': 'gray',
+    'UNDER REVIEW': 'orange',
+    'APPROVED': 'green',
+    'REJECTED': 'red',
+    'CORRECTION REQUIRED': 'orange',
+    'ASSIGNED TO WARDEN': 'green',
+    'FORWARDED_TO_WARDEN': 'green',
+    'BED_ALLOCATION_PENDING': 'green',
+    'BED_ALLOCATED': 'green'
+  };
+
+  const handleQuickAction = (path) => {
+    if (path === '/student/room') {
+      if (!isApproved) {
+        alert('Your hostel application is currently under review. This feature will be available after your application is approved.');
+        return;
+      }
+      if (!hasAllocation) {
+        alert('Your application is approved, but a room has not been allocated yet. Please wait for the warden to allocate your room.');
+        return;
+      }
+    }
+    const isProtected = ['/student/leave', '/student/complaints', '/student/fees'];
+    if (isProtected.includes(path) && !isApproved) {
+      alert('Your hostel application is currently under review. This feature will be available after your application is approved.');
+      return;
+    }
+    navigate(path);
+  };
 
   return (
-    <DashboardLayout>
-      <div className="welcome-section">
-        <div className="welcome-text">
-          <h1>Good Morning, Student 👋</h1>
-          <p>Here's what's happening with your hostel account.</p>
-        </div>
-      </div>
+    <DashboardLayout notifications={notifications} fetchDashboard={fetchDashboard} applicationStatus={application?.status} hasAllocation={hasAllocation}>
+      
+      {isRejected ? (
+            <div className="pending-application-banner" style={{ backgroundColor: '#fee2e2', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #ef4444' }}>
+              <h2 style={{ color: '#b91c1c', margin: '0 0 8px 0', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertTriangle size={20} /> APPLICATION REJECTED
+              </h2>
+              <p style={{ color: '#7f1d1d', margin: 0 }}>
+                Your hostel application has been rejected. Please contact administration for more details.
+              </p>
+            </div>
+          ) : isApproved && hasAllocation ? (
+            <div className="pending-application-banner" style={{ backgroundColor: '#dcfce7', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #22c55e' }}>
+              <h2 style={{ color: '#15803d', margin: '0 0 8px 0', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle2 size={20} /> HOSTEL ALLOCATION CONFIRMED
+              </h2>
+              <p style={{ color: '#166534', margin: 0 }}>
+                Your bed has been successfully allocated. Check your room details below.
+              </p>
+            </div>
+          ) : isApproved && !hasAllocation ? (
+            <div className="pending-application-banner" style={{ backgroundColor: '#e0f2fe', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #38bdf8' }}>
+              <h2 style={{ color: '#0369a1', margin: '0 0 8px 0', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle2 size={20} /> APPLICATION APPROVED
+              </h2>
+              <p style={{ color: '#075985', margin: 0 }}>
+                Your hostel application has been approved. Hostel/room allocation is pending.
+              </p>
+            </div>
+          ) : (
+            <div className="pending-application-banner" style={{ backgroundColor: '#fef3c7', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #f59e0b' }}>
+              <h2 style={{ color: '#b45309', margin: '0 0 8px 0', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertTriangle size={20} /> APPLICATION UNDER REVIEW
+              </h2>
+              <p style={{ color: '#92400e', margin: 0 }}>
+                Your hostel application has been submitted successfully and is currently waiting for administrator approval.
+              </p>
+            </div>
+          )}
+
+          <div className="welcome-section">
+            <div className="welcome-text">
+              <h1>Good Morning, {data?.user?.fullName?.split(' ')[0] || 'Student'} 👋</h1>
+              <p>Here's what's happening with your hostel account.</p>
+            </div>
+          </div>
 
       <div className="stats-row">
         {/* Profile Completion */}
+        {/* Application Status */}
         <div className="stat-card stat-profile">
           <div className="stat-header">
-            <span className="stat-title">PROFILE</span>
-            <span className="stat-badge blue-badge">85% Complete</span>
+            <span className="stat-title">APPLICATION STATUS</span>
+            <span className={`stat-badge ${statusColors[application?.status || 'NEW']}-badge`}>
+              {isApproved ? 'Approved' : application?.status || 'Pending'}
+            </span>
           </div>
           <div className="stat-progress-bar">
-            <div className="progress-fill blue-fill" style={{ width: '85%' }}></div>
+            <div className={`progress-fill ${statusColors[application?.status || 'NEW']}-fill`} style={{ width: isApproved ? '100%' : '50%' }}></div>
           </div>
-          <span className="stat-subtitle">Missing: Emergency Contact</span>
+          <span className="stat-subtitle">{isApproved ? 'Approved for hostel assignment' : 'Pending administrator review'}</span>
         </div>
 
-        {/* Room Information */}
+        {/* Room / Allocation Information */}
         <div className="stat-card stat-room">
           <div className="stat-header">
-            <span className="stat-title">ROOM INFO</span>
-            <Building size={16} className="stat-icon gray-icon" />
+            <span className="stat-title">ALLOCATION STATUS</span>
+            {hasAllocation ? (
+              <span className="stat-badge green-badge">Allocated</span>
+            ) : isApproved ? (
+              <span className="stat-badge orange-badge">Pending Room</span>
+            ) : (
+              <span className="stat-badge gray-badge">Not Ready</span>
+            )}
           </div>
-          <div className="stat-value-group">
-            <span className="stat-main-val">A-204</span>
-            <span className="stat-sub-val">Block A • Bed 2</span>
-          </div>
-          <span className="stat-subtitle">Boys Hostel Main</span>
+          {hasAllocation ? (
+            <div className="stat-value-group">
+              <span className="stat-main-val">Room {roomAllocation.roomNumber}</span>
+              <span className="stat-sub-val">Block {roomAllocation.block} • Bed {roomAllocation.bed}</span>
+            </div>
+          ) : (
+            <div className="stat-value-group">
+              <span className="stat-main-val" style={{ fontSize: '1.1rem', color: '#6b7280' }}>
+                {isApproved ? 'Not Allocated Yet' : 'Not Allocated'}
+              </span>
+            </div>
+          )}
+          <span className="stat-subtitle">{hasAllocation ? roomAllocation.hostelName : (isApproved ? 'Waiting for warden allocation' : 'Waiting for application approval')}</span>
         </div>
 
         {/* Fee Status */}
         <div className="stat-card stat-fee">
           <div className="stat-header">
             <span className="stat-title">FEE STATUS</span>
-            <span className="stat-badge red-badge">⚠ Pending</span>
+            {fee ? (
+               <span className={`stat-badge ${fee.status === 'Paid' ? 'green-badge' : 'red-badge'}`}>
+                 {fee.status === 'Paid' ? 'Paid' : '⚠ Pending'}
+               </span>
+            ) : (
+               <span className="stat-badge gray-badge">N/A</span>
+            )}
           </div>
           <div className="stat-value-group">
-            <span className="stat-main-val">₹4,000</span>
-            <span className="stat-sub-val">Due of ₹40,000</span>
+            <span className="stat-main-val">₹{fee ? fee.pendingAmount.toLocaleString() : '0'}</span>
+            <span className="stat-sub-val">{fee ? `Due of ₹${fee.totalFee.toLocaleString()}` : ''}</span>
           </div>
-          <span className="stat-subtitle">Paid: ₹36,000</span>
+          <span className="stat-subtitle">Paid: ₹{fee ? fee.paidAmount.toLocaleString() : '0'}</span>
         </div>
 
         {/* Attendance */}
@@ -71,19 +208,19 @@ export default function StudentDashboard() {
       <div className="quick-actions-section">
         <h3>Quick Actions</h3>
         <div className="quick-actions-grid">
-          <button className="quick-action-card" onClick={() => navigate('/student/leave')}>
+          <button className="quick-action-card" onClick={() => handleQuickAction('/student/leave')}>
             <div className="qa-icon-wrapper blue"><Calendar size={20} /></div>
             <span>Apply Leave</span>
           </button>
-          <button className="quick-action-card" onClick={() => navigate('/student/complaints')}>
+          <button className="quick-action-card" onClick={() => handleQuickAction('/student/complaints')}>
             <div className="qa-icon-wrapper orange"><AlertTriangle size={20} /></div>
             <span>Submit Complaint</span>
           </button>
-          <button className="quick-action-card" onClick={() => navigate('/student/room')}>
+          <button className="quick-action-card" onClick={() => handleQuickAction('/student/room')}>
             <div className="qa-icon-wrapper purple"><DoorClosed size={20} /></div>
             <span>View Room</span>
           </button>
-          <button className="quick-action-card" onClick={() => navigate('/student/fees')}>
+          <button className="quick-action-card" onClick={() => handleQuickAction('/student/fees')}>
             <div className="qa-icon-wrapper green"><Receipt size={20} /></div>
             <span>View Fees</span>
           </button>
@@ -104,17 +241,28 @@ export default function StudentDashboard() {
 
 
         {/* Fee Alert */}
-        <div className="bento-card fee-alert-card">
-          <div className="fee-header">
-            <h2>Fee Alert</h2>
-            <span className="urgent-badge">URGENT</span>
+        {fee && fee.pendingAmount > 0 ? (
+          <div className="bento-card fee-alert-card">
+            <div className="fee-header">
+              <h2>Fee Alert</h2>
+              <span className="urgent-badge">URGENT</span>
+            </div>
+            <p>Outstanding Mess/Hostel Fees for current semester.</p>
+            <div className="fee-amount">₹{fee.pendingAmount.toLocaleString()}</div>
+            <button className="pay-now-btn">Pay Now <CreditCard size={16} /></button>
+            <Receipt size={120} className="watermark-icon" />
           </div>
-          <p>Outstanding Mess Fees for current semester.</p>
-          <div className="fee-amount">₹4,000</div>
-          <button className="pay-now-btn">Pay Now <CreditCard size={16} /></button>
-          {/* Faded watermark icon */}
-          <Receipt size={120} className="watermark-icon" />
-        </div>
+        ) : (
+          <div className="bento-card fee-alert-card" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+            <div className="fee-header">
+              <h2 style={{ color: '#166534' }}>Fee Status</h2>
+              <span className="badge-success">Clear</span>
+            </div>
+            <p style={{ color: '#15803d' }}>No outstanding fees at the moment.</p>
+            <div className="fee-amount" style={{ color: '#166534' }}>₹0</div>
+            <CheckCircle2 size={120} className="watermark-icon" style={{ opacity: 0.1, color: '#166534' }} />
+          </div>
+        )}
 
 
 
@@ -202,7 +350,6 @@ export default function StudentDashboard() {
             </div>
           </div>
         </div>
-
       </div>
     </DashboardLayout>
   );
